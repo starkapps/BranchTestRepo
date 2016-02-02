@@ -63,9 +63,14 @@ public class CurrencyActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_select_all) {
-            mAdapter.selectAllCurrencies();
-            return true;
+        switch (id) {
+            case R.id.action_select_all:
+                mAdapter.selectAllCurrencies();
+                return true;
+
+            case R.id.action_unselect_all:
+                mAdapter.unselectAllCurrencies();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);

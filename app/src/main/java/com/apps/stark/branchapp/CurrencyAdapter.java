@@ -87,4 +87,9 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         mSelectedCurrencies = new ArrayList<>(Arrays.asList(mCurrencies));
         notifyDataSetChanged();
     }
+
+    public void unselectAllCurrencies() {
+        mSelectedCurrencies.clear();
+        notifyDataSetChanged();
+    }
 }
