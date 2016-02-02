@@ -1,6 +1,7 @@
 package com.apps.stark.branchapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,6 +32,9 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int CURRENCY_CODE = 100;
+    public static final String KEY_CURRENCIES = "Currencies";
+    public static final String KEY_SELECTED = "Selected";
     private TextView mTvCurrency;
     private TextView mTvAsk;
     private TextView mTvTime;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private String mSelectedCurrency = "USD";
     private String[] mCurrencies;
     private Spinner mCurrencySpinner;
+    private ArrayAdapter<String> mSpinnerAdapter;
     private int mCurrencyIndex = 0;
 
     final Handler mQuoteHandler = new Handler();
@@ -81,13 +86,13 @@ public class MainActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mCurrencySpinner.setAdapter(spinnerAdapter);
+        mSpinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+        mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mCurrencySpinner.setAdapter(mSpinnerAdapter);
         for (String curr : mCurrencies) {
-            spinnerAdapter.add(curr);
+            mSpinnerAdapter.add(curr);
         }
-        spinnerAdapter.notifyDataSetChanged();
+        mSpinnerAdapter.notifyDataSetChanged();
 
         mExitButton = (Button) findViewById(R.id.exit_button);
         mExitButton.setOnClickListener(new View.OnClickListener() {
@@ -125,11 +130,30 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_select) {
+            Intent intent = new Intent(this, CurrencyActivity.class);
+            intent.putExtra(KEY_CURRENCIES, mCurrencies);
+            startActivityForResult(intent, CURRENCY_CODE);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        // check if the request code is same as what is passed  here it is 2
+        if(requestCode == CURRENCY_CODE)
+        {
+            String[] selected = data.getStringArrayExtra(KEY_SELECTED);
+            mCurrencies = selected;
+            mSpinnerAdapter.clear();
+            for (String curr : mCurrencies) {
+                mSpinnerAdapter.add(curr);
+            }
+            mSpinnerAdapter.notifyDataSetChanged();        }
     }
 
     private void startQuotes() {
