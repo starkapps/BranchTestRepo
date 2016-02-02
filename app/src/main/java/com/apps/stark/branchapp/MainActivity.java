@@ -31,8 +31,15 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -43,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String KEY_CURRENCIES = "Currencies";
     public static final String KEY_SELECTED = "Selected";
     private TextView mTvCurrency;
+    private TextView mTVCountry;
     private TextView mTvAsk;
     private TextView mTvTime;
     private Button mExitButton;
@@ -55,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> mSpinnerAdapter;
     private int mCurrencyIndex = 0;
     private ArrayList<String> mAllCurrencies = new ArrayList<>();
+    private HashMap<String, String> mCurrencyCountryMap = new HashMap<>();
 
     final Handler mQuoteHandler = new Handler();
     Runnable mQuoteRunnable = new Runnable() {
@@ -76,7 +85,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Util.readAssetFile(this, "currencies", mCurrencyCountryMap);
+
         mTvCurrency = (TextView) findViewById(R.id.currency_name);
+        mTVCountry = (TextView) findViewById(R.id.country_name);
         mTvAsk = (TextView) findViewById(R.id.ask_price);
         mTvTime = (TextView) findViewById(R.id.time_stamp);
         mCurrencies = getResources().getStringArray(R.array.selected_currencies);
@@ -196,6 +208,8 @@ public class MainActivity extends AppCompatActivity {
         QuoteInfo qi = new QuoteInfo();
 
         qi.setCurrencyName(mSelectedCurrency);
+        qi.setCountryName(mCurrencyCountryMap.get(mSelectedCurrency));
+
         try {
             qi.setAskingPrice(jsonQuote.get(getString(R.string.ask)).toString());
             qi.setTimeStamp(jsonQuote.get(getString(R.string.timestamp)).toString());
@@ -208,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateQuote(QuoteInfo qi) {
         mTvCurrency.setText(qi.getCurrencyName());
+        mTVCountry.setText(qi.getCountryName());
         mTvAsk.setText(qi.getAskingPrice());
         mTvTime.setText(qi.getTimeStamp());
     }

@@ -10,16 +10,20 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 public class CurrencyAdapter extends ArrayAdapter<String> {
     private final Activity mContext;
     private final String[] mCurrencies;
-    public LinkedHashSet<String> mSelectedCurrencies = new LinkedHashSet<>();
+    public ArrayList<String> mSelectedCurrencies = new ArrayList<>();
+    private HashMap<String, String> mCountryMap = new HashMap<String, String>();
 
     static class ViewHolder {
         public CurrencyAdapter mAdapter;
-        public TextView mName;
+        public TextView mCurrencyName;
+        public TextView mCountryName;
         public CheckBox mCheckbox;
 
         public ViewHolder(CurrencyAdapter adapter) {
@@ -27,10 +31,11 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         }
     }
 
-    public CurrencyAdapter(Activity context, String[] currencies) {
+    public CurrencyAdapter(Activity context, String[] currencies, HashMap<String, String>countryMap) {
         super(context, R.layout.currency_layout, currencies);
         this.mContext = context;
         this.mCurrencies = currencies;
+        mCountryMap = countryMap;
     }
 
     @Override
@@ -42,7 +47,8 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
             rowView = inflater.inflate(R.layout.currency_layout, null);
             // configure view holder
             ViewHolder viewHolder = new ViewHolder(this);
-            viewHolder.mName = (TextView) rowView.findViewById(R.id.currency_name);
+            viewHolder.mCurrencyName = (TextView) rowView.findViewById(R.id.currency_name);
+            viewHolder.mCountryName = (TextView) rowView.findViewById(R.id.country_name);
             viewHolder.mCheckbox = (CheckBox) rowView.findViewById(R.id.cb_currency);
             rowView.setTag(viewHolder);
         }
@@ -51,14 +57,15 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         final ViewHolder holder = (ViewHolder) rowView.getTag();
         final int index = position;
         String s = mCurrencies[position];
-        holder.mName.setText(s);
+        holder.mCurrencyName.setText(s);
+        holder.mCountryName.setText(mCountryMap.get(s));
         boolean isChecked = mSelectedCurrencies.contains(s);
         holder.mCheckbox.setChecked(isChecked);
         holder.mCheckbox.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        String name = holder.mName.getText().toString();
+                        String name = holder.mCurrencyName.getText().toString();
                         if (isChecked) {
                             holder.mAdapter.mSelectedCurrencies.add(name);
                         } else {
@@ -72,6 +79,7 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
     }
 
     public String[] getSelectedCurrencies() {
+        Collections.sort(mSelectedCurrencies);
         return mSelectedCurrencies.toArray(new String[mSelectedCurrencies.size()]);
     }
 }

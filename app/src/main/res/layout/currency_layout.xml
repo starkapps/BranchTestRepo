@@ -10,13 +10,25 @@
         android:id="@+id/currency_name"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textStyle="bold"
-        android:paddingRight="10sp"
+        android:layout_weight="1"
+        android:paddingStart="10sp"
         />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/country_name"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textStyle="bold"
+        android:layout_weight="2"
+        />
+
 
     <CheckBox
         android:id="@+id/cb_currency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingEnd="10sp"
         android:checked="false" />
 
 </LinearLayout>

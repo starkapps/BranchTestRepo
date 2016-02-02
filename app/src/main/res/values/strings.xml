@@ -12,6 +12,7 @@
     <string name="Name">Currency name</string>
     <string name="Ask">Ask price</string>
     <string name="Time">Timestamp</string>
+    <string name="spacer">" - "</string>
     <string name="exit">Exit application</string>
     <string name="save">Save and exit</string>
 

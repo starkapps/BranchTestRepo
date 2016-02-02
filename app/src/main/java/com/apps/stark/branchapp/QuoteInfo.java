@@ -7,6 +7,10 @@ public class QuoteInfo {
 
     private String mCurrencyName;
 
+    private String mCountryName;
+    private String mAskingPrice;
+    private String mTimeStamp;
+
     public String getAskingPrice() {
         return mAskingPrice;
     }
@@ -23,14 +27,19 @@ public class QuoteInfo {
         this.mTimeStamp = mTimeStamp;
     }
 
-    private String mAskingPrice;
-    private String mTimeStamp;
-
     public String getCurrencyName() {
         return mCurrencyName;
     }
 
     public void setCurrencyName(String mCurrencyName) {
         this.mCurrencyName = mCurrencyName;
+    }
+
+    public String getCountryName() {
+        return mCountryName;
+    }
+
+    public void setCountryName(String mCountryName) {
+        this.mCountryName = mCountryName;
     }
 }
