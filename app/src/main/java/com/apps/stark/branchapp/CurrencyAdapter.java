@@ -10,6 +10,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -55,7 +56,6 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
 
         // fill data
         final ViewHolder holder = (ViewHolder) rowView.getTag();
-        final int index = position;
         String s = mCurrencies[position];
         holder.mCurrencyName.setText(s);
         holder.mCountryName.setText(mCountryMap.get(s));
@@ -81,5 +81,10 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
     public String[] getSelectedCurrencies() {
         Collections.sort(mSelectedCurrencies);
         return mSelectedCurrencies.toArray(new String[mSelectedCurrencies.size()]);
+    }
+
+    public void selectAllCurrencies() {
+        mSelectedCurrencies = new ArrayList<>(Arrays.asList(mCurrencies));
+        notifyDataSetChanged();
     }
 }

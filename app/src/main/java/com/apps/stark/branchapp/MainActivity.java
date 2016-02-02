@@ -165,12 +165,16 @@ public class MainActivity extends AppCompatActivity {
         if (data != null) {
             if (requestCode == CURRENCY_CODE) {
                 String[] selected = data.getStringArrayExtra(KEY_SELECTED);
-                mCurrencies = selected;
-                mSpinnerAdapter.clear();
-                for (String curr : mCurrencies) {
-                    mSpinnerAdapter.add(curr);
+                if (selected.length > 0) {
+                    mCurrencies = selected;
+                    mSpinnerAdapter.clear();
+                    for (String curr : mCurrencies) {
+                        mSpinnerAdapter.add(curr);
+                    }
+                    mSpinnerAdapter.notifyDataSetChanged();
+                    // Grab the first of current list of selected currencies
+                    mSelectedCurrency = mCurrencies[0];
                 }
-                mSpinnerAdapter.notifyDataSetChanged();
             }
         }
     }
