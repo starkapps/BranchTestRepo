@@ -19,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -29,6 +30,12 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,16 +54,16 @@ public class MainActivity extends AppCompatActivity {
     private Spinner mCurrencySpinner;
     private ArrayAdapter<String> mSpinnerAdapter;
     private int mCurrencyIndex = 0;
+    private ArrayList<String> mAllCurrencies = new ArrayList<>();
 
     final Handler mQuoteHandler = new Handler();
     Runnable mQuoteRunnable = new Runnable() {
 
         @Override
         public void run() {
-            try{
+            try {
                 getQuotes(mSelectedCurrency);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -131,9 +138,9 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_select) {
-            Intent intent = new Intent(this, CurrencyActivity.class);
-            intent.putExtra(KEY_CURRENCIES, mCurrencies);
-            startActivityForResult(intent, CURRENCY_CODE);
+            // Get the full currency list -- if it's not populated yet,
+            // query BitCoin API. Once the list is available,
+            getJsonCurrencyList();
             return true;
         }
 
@@ -141,19 +148,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // check if the request code is same as what is passed  here it is 2
-        if(requestCode == CURRENCY_CODE)
-        {
+        if (requestCode == CURRENCY_CODE) {
             String[] selected = data.getStringArrayExtra(KEY_SELECTED);
             mCurrencies = selected;
             mSpinnerAdapter.clear();
             for (String curr : mCurrencies) {
                 mSpinnerAdapter.add(curr);
             }
-            mSpinnerAdapter.notifyDataSetChanged();        }
+            mSpinnerAdapter.notifyDataSetChanged();
+        }
     }
 
     private void startQuotes() {
@@ -165,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getQuotes(String currency) {
-        String url = getString(R.string.URL)  + currency;
+        String url = getString(R.string.URL) + currency;
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
@@ -205,6 +210,56 @@ public class MainActivity extends AppCompatActivity {
         mTvCurrency.setText(qi.getCurrencyName());
         mTvAsk.setText(qi.getAskingPrice());
         mTvTime.setText(qi.getTimeStamp());
+    }
+
+    private void fireUpCurrencyActivity() {
+        Intent intent = new Intent(this, CurrencyActivity.class);
+        intent.putExtra(KEY_CURRENCIES, mAllCurrencies.toArray(new String[mAllCurrencies.size()]));
+        startActivityForResult(intent, CURRENCY_CODE);
+    }
+
+    private void showErrorToast(String errStr) {
+        Toast.makeText(this, (String)errStr, Toast.LENGTH_SHORT).show();
+    }
+
+    private void getJsonCurrencyList() {
+
+        // Assume that the list of all currencies won't change, so only fetch once from BitCoin
+        if (mAllCurrencies.isEmpty()) {
+            String url = getString(R.string.ALL_URL);
+            RequestQueue queue = Volley.newRequestQueue(this);
+
+            JsonObjectRequest jsObjRequest = new JsonObjectRequest
+                    (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            mAllCurrencies = getAllCurrencies(response);
+                            fireUpCurrencyActivity();
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            String errStr = "That didn't work! Error " + error;
+                            Log.d(TAG, errStr);
+                            showErrorToast(errStr);
+                        }
+                    });
+            queue.add(jsObjRequest);
+        } else {
+            fireUpCurrencyActivity();
+        }
+    }
+
+    private ArrayList<String> getAllCurrencies(JSONObject jList) {
+        ArrayList<String> currs = new ArrayList<>();
+        int i = 0;
+        Iterator<String> iter = jList.keys();
+        while (iter.hasNext()) {
+            String name = iter.next();
+            currs.add(name);
+        }
+        Collections.sort(currs);
+        return currs;
     }
 
 }

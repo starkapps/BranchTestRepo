@@ -59,7 +59,6 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         String name = holder.mName.getText().toString();
-                        boolean checked = holder.mCheckbox.isChecked();
                         if (isChecked) {
                             holder.mAdapter.mSelectedCurrencies.add(name);
                         } else {
