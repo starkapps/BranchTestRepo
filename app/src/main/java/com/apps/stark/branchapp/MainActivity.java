@@ -162,14 +162,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CURRENCY_CODE) {
-            String[] selected = data.getStringArrayExtra(KEY_SELECTED);
-            mCurrencies = selected;
-            mSpinnerAdapter.clear();
-            for (String curr : mCurrencies) {
-                mSpinnerAdapter.add(curr);
+        if (data != null) {
+            if (requestCode == CURRENCY_CODE) {
+                String[] selected = data.getStringArrayExtra(KEY_SELECTED);
+                mCurrencies = selected;
+                mSpinnerAdapter.clear();
+                for (String curr : mCurrencies) {
+                    mSpinnerAdapter.add(curr);
+                }
+                mSpinnerAdapter.notifyDataSetChanged();
             }
-            mSpinnerAdapter.notifyDataSetChanged();
         }
     }
 
