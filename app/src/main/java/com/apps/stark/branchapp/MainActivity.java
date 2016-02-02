@@ -1,7 +1,9 @@
 package com.apps.stark.branchapp;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,7 +12,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -29,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvCurrency;
     private TextView mTvAsk;
     private TextView mTvTime;
+    private Button mExitButton;
 
     private static final int DELAY = 10000;  // Millis
     private static final String TAG = "BranchApp";
@@ -66,14 +72,47 @@ public class MainActivity extends AppCompatActivity {
         mCurrencySpinner.setSelection(mCurrencyIndex);
         mCurrencySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                mQuoteHandler.removeCallbacks(mQuoteRunnable);
+                stopQuotes();
                 mCurrencyIndex = pos;
                 mSelectedCurrency = mCurrencies[mCurrencyIndex];
-                mQuoteHandler.post(mQuoteRunnable);
+                startQuotes();
             }
+
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mCurrencySpinner.setAdapter(spinnerAdapter);
+        for (String curr : mCurrencies) {
+            spinnerAdapter.add(curr);
+        }
+        spinnerAdapter.notifyDataSetChanged();
+
+        mExitButton = (Button) findViewById(R.id.exit_button);
+        mExitButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Only poll for prices if we're in the foreground
+        startQuotes();
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopQuotes();
     }
 
     @Override
@@ -91,6 +130,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startQuotes() {
+        mQuoteHandler.post(mQuoteRunnable);
+    }
+
+    private void stopQuotes() {
+        mQuoteHandler.removeCallbacks(mQuoteRunnable);
     }
 
     private void getQuotes(String currency) {

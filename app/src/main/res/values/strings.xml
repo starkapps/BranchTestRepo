@@ -2,13 +2,15 @@
     <string name="app_name">BranchApp</string>
     <string name="action_settings">Settings</string>
     <string name="URL">https://api.bitcoinaverage.com/ticker/global/</string>
-    <string name="Greeting">BitCoin Asking Price\nSelect Currency</string>
+    <string name="Greeting">BitCoin Asking Price</string>
+    <string name="Greeting2">Select Currency</string>
     <string name="select">Available currencies:</string>
     <string name="ask">ask</string>
     <string name="timestamp">timestamp</string>
     <string name="Name">Currency name</string>
     <string name="Ask">Ask price</string>
     <string name="Time">Timestamp</string>
+    <string name="exit">Exit application</string>
 
     <string-array name="long_currencies">
         <item>USD (US Dollars)</item>

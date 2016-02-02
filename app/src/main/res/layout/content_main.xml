@@ -20,29 +20,50 @@
         android:textSize="30sp"
         android:paddingBottom="30sp"
         android:layout_alignParentTop="true"
+        android:textStyle="bold"
         android:layout_centerHorizontal="true" />
 
     <TextView
+        android:id="@+id/greeting2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/list"
-        android:text="@string/select"
-        android:layout_below="@+id/greeting"
+        android:text="@string/Greeting2"
         android:textSize="30sp"
-        android:paddingRight="10sp"
-        android:paddingBottom="10sp"
-        android:textStyle="bold"
-        />
+        android:layout_below="@+id/greeting"
+        android:layout_alignParentStart="true"
+        android:textStyle="bold" />
 
-    <Spinner
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_width="wrap_content"
+
+    <LinearLayout
+        android:id="@+id/spinner_layout"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/currency_spinner"
-        android:layout_below="@+id/list"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/greeting2"
         android:paddingBottom="40sp"
-        android:entries="@array/long_currencies"
-         />
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/list"
+            android:text="@string/select"
+            android:layout_weight="1"
+            android:textSize="30sp"
+            android:paddingRight="10sp"
+            />
+
+        <Spinner
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/currency_spinner"
+            android:layout_weight="1"
+            android:entries="@array/long_currencies"
+            />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/currency_name"
@@ -52,7 +73,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:paddingBottom="10sp"
-        android:layout_below="@+id/currency_spinner"
+        android:layout_below="@+id/spinner_layout"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -76,6 +97,14 @@
         android:paddingBottom="10sp"
         android:layout_below="@+id/ask_price"
         android:layout_centerHorizontal="true" />
+
+
+        <Button android:id="@+id/exit_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/exit" />
+
 
 
 </RelativeLayout>
