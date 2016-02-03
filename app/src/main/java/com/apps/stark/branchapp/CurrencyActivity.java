@@ -3,6 +3,7 @@ package com.apps.stark.branchapp;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -11,19 +12,27 @@ import android.view.View;
 import android.widget.Button;
 import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
+import android.widget.SearchView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class CurrencyActivity extends AppCompatActivity {
+public class CurrencyActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     private Button mSaveButton;
     private CurrencyAdapter mAdapter;
     private HashMap<String, String> mCurrencyCountryMap = new HashMap<>();
     private ListView mLv;
+    private ArrayList<String> mCurrencyArray;
+    private ArrayList<String> mAllCurrencyArray;
+    private SearchView mSearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,12 +40,14 @@ public class CurrencyActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String[] currencies = intent.getStringArrayExtra(MainActivity.KEY_CURRENCIES);
         setContentView(R.layout.activity_currency);
+        mCurrencyArray = new ArrayList<>(Arrays.asList(currencies));
+        mAllCurrencyArray = new ArrayList<>(mCurrencyArray);
 
         mLv = (ListView) findViewById(R.id.list_view);
 
         Util.readAssetFile(this, "currencies", mCurrencyCountryMap);
 
-        mAdapter = new CurrencyAdapter(this, currencies, mCurrencyCountryMap);
+        mAdapter = new CurrencyAdapter(this, mCurrencyArray, mCurrencyCountryMap);
         mLv.setAdapter(mAdapter);
 
         mSaveButton = (Button) findViewById(R.id.save_button);
@@ -56,6 +67,10 @@ public class CurrencyActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_currency, menu);
+        final MenuItem item = menu.findItem(R.id.search);
+        mSearchView = (SearchView) MenuItemCompat.getActionView(item);
+        mSearchView.setOnQueryTextListener(this);
+        mSearchView.setQueryHint(getString(R.string.search_hint));
         return true;
     }
 
@@ -76,5 +91,16 @@ public class CurrencyActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public boolean onQueryTextChange(String query) {
+        final ArrayList<String> filtered = mAdapter.filter(mAdapter.getAllCurrencies(), query);
+        mAdapter.animateTo(filtered);
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
 }
 

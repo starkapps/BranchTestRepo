@@ -17,6 +17,8 @@
     <string name="spacer">" - "</string>
     <string name="exit">Exit application</string>
     <string name="save">Save and exit</string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Currency</string>
 
     <string-array name="long_currencies">
         <item>USD (US Dollars)</item>
