@@ -6,7 +6,7 @@
     <string name="action_unselect_all">Unselect ALL currencies</string>
     <string name="URL">https://api.bitcoinaverage.com/ticker/global/</string>
     <string name="ALL_URL">https://api.bitcoinaverage.com/ticker/global/all</string>
-    <string name="Greeting">BitCoin Asking Price</string>
+    <string name="Greeting">BitCoin Ask Price</string>
     <string name="Greeting2">Select Currency</string>
     <string name="select">Available currencies:</string>
     <string name="ask">ask</string>

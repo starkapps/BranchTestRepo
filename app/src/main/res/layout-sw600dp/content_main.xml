@@ -61,6 +61,7 @@
             android:id="@+id/currency_spinner"
             android:layout_weight="2"
             android:entries="@array/long_currencies"
+            android:background="@drawable/btn_spinner"
             />
 
     </LinearLayout>
@@ -81,6 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Name"
+            android:textColor="@color/medBlue"
             android:textSize="20sp"
             android:textStyle="bold"
             />
@@ -90,6 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/spacer"
+            android:textColor="@color/medBlue"
             android:textSize="20sp"
             android:textStyle="bold"
             />
@@ -99,6 +102,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Name"
+            android:textColor="@color/medBlue"
             android:textSize="20sp"
             android:textStyle="bold"
             />
@@ -109,9 +113,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/Ask"
-        android:textSize="20sp"
+        android:textSize="30sp"
         android:textStyle="bold"
         android:paddingBottom="10sp"
+        android:textColor="@color/colorAccent"
         android:layout_below="@+id/currency_name_layout"
         android:layout_centerHorizontal="true" />
 
@@ -121,6 +126,7 @@
         android:layout_height="wrap_content"
         android:text="@string/Time"
         android:textStyle="bold"
+        android:textColor="@color/medLtBlue"
         android:textSize="20sp"
         android:paddingBottom="10sp"
         android:layout_below="@+id/ask_price"
