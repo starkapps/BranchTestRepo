@@ -1,37 +1,28 @@
 package com.apps.stark.branchapp;
 
-import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 import android.widget.SearchView;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class CurrencyActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     private Button mSaveButton;
     private CurrencyAdapter mAdapter;
     private HashMap<String, String> mCurrencyCountryMap = new HashMap<>();
+    private HashMap<String, String> mSearchMap = new HashMap<>();
     private ListView mLv;
     private ArrayList<String> mCurrencyArray;
-    private ArrayList<String> mAllCurrencyArray;
     private SearchView mSearchView;
 
     @Override
@@ -41,11 +32,10 @@ public class CurrencyActivity extends AppCompatActivity implements SearchView.On
         String[] currencies = intent.getStringArrayExtra(MainActivity.KEY_CURRENCIES);
         setContentView(R.layout.activity_currency);
         mCurrencyArray = new ArrayList<>(Arrays.asList(currencies));
-        mAllCurrencyArray = new ArrayList<>(mCurrencyArray);
 
         mLv = (ListView) findViewById(R.id.list_view);
 
-        Util.readAssetFile(this, "currencies", mCurrencyCountryMap);
+        Util.readAssetFile(this, "currencies", mCurrencyCountryMap, mSearchMap);
 
         mAdapter = new CurrencyAdapter(this, mCurrencyArray, mCurrencyCountryMap);
         mLv.setAdapter(mAdapter);
@@ -93,7 +83,7 @@ public class CurrencyActivity extends AppCompatActivity implements SearchView.On
 
     @Override
     public boolean onQueryTextChange(String query) {
-        final ArrayList<String> filtered = mAdapter.filter(mAdapter.getAllCurrencies(), query);
+        final ArrayList<String> filtered = mAdapter.filter(mSearchMap, query);
         mAdapter.animateTo(filtered);
         return true;
     }

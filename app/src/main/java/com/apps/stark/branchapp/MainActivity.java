@@ -31,18 +31,10 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -150,8 +142,6 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_select) {
-            // Get the full currency list -- if it's not populated yet,
-            // query BitCoin API. Once the list is available,
             getJsonCurrencyList();
             return true;
         }
@@ -204,6 +194,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, "Failed");
+                        showErrorToast("Volley request failed with network error " +
+                                error.networkResponse.statusCode);
                         mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
                     }
                 });
@@ -262,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
                         public void onErrorResponse(VolleyError error) {
                             String errStr = "That didn't work! Error " + error;
                             Log.d(TAG, errStr);
-                            showErrorToast(errStr);
-                        }
+                            showErrorToast("Volley request failed with network error " +
+                                    error.networkResponse.statusCode);                        }
                     });
             queue.add(jsObjRequest);
         } else {

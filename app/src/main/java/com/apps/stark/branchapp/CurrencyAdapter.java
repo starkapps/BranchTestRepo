@@ -10,20 +10,18 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 public class CurrencyAdapter extends ArrayAdapter<String> {
     private final Activity mContext;
     private ArrayList<String> mCurrencies;
     public ArrayList<String> mSelectedCurrencies = new ArrayList<>();
-    public ArrayList<String> mAllCurrencies = new ArrayList<>();
     public ArrayList<String> mAllCountries = new ArrayList<>();
     private HashMap<String, String> mCountryMap = new HashMap<String, String>();
+
 
     static class ViewHolder {
         public CurrencyAdapter mAdapter;
@@ -40,7 +38,6 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         super(context, R.layout.currency_layout, currencies);
         this.mContext = context;
         this.mCurrencies = currencies;
-        this.mAllCurrencies = new ArrayList<>(currencies);
         mCountryMap = countryMap;
         Iterator it = mCountryMap.entrySet().iterator();
         while (it.hasNext()) {
@@ -89,13 +86,6 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         return mSelectedCurrencies.toArray(new String[mSelectedCurrencies.size()]);
     }
 
-    public ArrayList<String> getAllCurrencies() {
-        return mAllCurrencies;
-    }
-
-    public ArrayList<String> getAllCountries() {
-        return mAllCountries;
-    }
     public void selectAllCurrencies() {
         mSelectedCurrencies = new ArrayList<>(mCurrencies);
         notifyDataSetChanged();
@@ -106,12 +96,16 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         notifyDataSetChanged();
     }
 
-    public ArrayList<String> filter(ArrayList<String> currs, String query) {
-        query = query.toLowerCase();
+    public ArrayList<String> filter(HashMap<String, String> map, String query) {
         final ArrayList<String> filtered = new ArrayList<>();
-        for (String name : currs) {
+        String name;
+        query = query.toLowerCase();
+        Iterator it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            name = (String)(pair.getValue());
             if (name.toLowerCase().contains(query)) {
-                filtered.add(name);
+                filtered.add((String)pair.getKey());
             }
         }
         return filtered;
@@ -124,7 +118,7 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         return info;
     }
 
-    public void addItem(int position, String info) {
+    public void addItem(String info) {
         this.add(info);
         notifyDataSetChanged();
     }
@@ -149,7 +143,7 @@ public class CurrencyAdapter extends ArrayAdapter<String> {
         for (int i = 0, count = currs.size(); i < count; i++) {
             final String info = currs.get(i);
             if (! mCurrencies.contains(info)) {
-                addItem(i, info);
+                addItem(info);
             }
         }
     }

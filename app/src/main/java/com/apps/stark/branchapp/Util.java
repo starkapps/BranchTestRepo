@@ -33,4 +33,25 @@ public class Util {
         }
     }
 
+    public static void readAssetFile(Context context, String filename, HashMap<String, String> countryMap, HashMap<String, String> searchMap) {
+        InputStream is = null;
+        String line;
+        String[] values;
+        try {
+            is = context.getAssets().open(filename);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            while ((line = reader.readLine()) != null) {
+                values = line.split("\t");
+                countryMap.put(values[0], values[1]);
+                searchMap.put(values[0], line);
+            }
+            is.close();
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+        }
+    }
+
 }
