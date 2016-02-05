@@ -27,28 +27,42 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.jjoe64.graphview.DefaultLabelFormatter;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final int CURRENCY_CODE = 100;
     public static final String KEY_CURRENCIES = "Currencies";
     public static final String KEY_SELECTED = "Selected";
+    private static final double VIEW_WINDOW_MILLIS = 120000d;
+    private static final int DELAY = 10000;  // Millis
+    private static final int NUM_DATA_POINTS = 1000;
+    private static final String TAG = "BranchApp";
+
     private TextView mTvCurrency;
     private TextView mTVCountry;
     private TextView mTvAsk;
     private TextView mTvTime;
     private Button mExitButton;
+    private GraphView mGraph;
+    private LineGraphSeries<DataPoint> mDataSeries;
 
-    private static final int DELAY = 10000;  // Millis
-    private static final String TAG = "BranchApp";
     private String mSelectedCurrency = "USD";
     private String[] mCurrencies;
     private Spinner mCurrencySpinner;
@@ -114,6 +128,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mGraph = (GraphView) findViewById(R.id.graph);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, 8);
+        Date d1 = calendar.getTime();
+        calendar.add(Calendar.MINUTE, 2);
+        Date d2 = calendar.getTime();
+        mGraph.getViewport().setMinX(d1.getTime());
+        mGraph.getViewport().setMaxX(d2.getTime());
+        mGraph.getViewport().setXAxisBoundsManual(true);
+        mGraph.getViewport().setScrollable(true);
+
+        // custom label formatter to show currency "EUR"
+        mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    // show normal x values
+                    SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss");
+
+                    // Create a calendar object that will convert the date and time value in milliseconds to date.
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis((long)value);
+                    String label = formatter.format(calendar.getTime());
+                    return label;
+                } else {
+                    // show currency for y values
+                    return super.formatLabel(value, isValueX);
+                }
+            }
+        });
+
     }
 
     @Override
@@ -175,6 +220,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopQuotes() {
         mQuoteHandler.removeCallbacks(mQuoteRunnable);
+        mGraph.removeAllSeries();
+        mDataSeries = null;
     }
 
     private void getQuotes(String currency) {
@@ -223,6 +270,28 @@ public class MainActivity extends AppCompatActivity {
         mTVCountry.setText(qi.getCountryName());
         mTvAsk.setText(qi.getAskingPrice());
         mTvTime.setText(qi.getTimeStamp());
+
+        // Update graph, too
+        Double dataPoint = Double.valueOf(qi.getAskingPrice());
+        SimpleDateFormat formatter = new SimpleDateFormat("EEEE, dd MMM yyyy HH:mm:ss");
+        Date date = new Date();
+        try {
+            date = formatter.parse(qi.getTimeStamp());
+        } catch (Exception e) {
+            //Just use system time
+        }
+        long time = date.getTime();
+        if (mDataSeries == null) {
+            mDataSeries = new LineGraphSeries<>(new DataPoint[] {
+                    new DataPoint(date, dataPoint)});
+            mGraph.addSeries(mDataSeries);
+            mGraph.getViewport().setMinX((double) time);
+            mGraph.getViewport().setMaxX((double) time + VIEW_WINDOW_MILLIS);
+            mGraph.getViewport().setScrollable(true);
+        } else {
+            // NUM_DATA_POINTS is how many GraphView will retain -- reduce # to use less memory
+            mDataSeries.appendData(new DataPoint(date, dataPoint), true, NUM_DATA_POINTS);
+        }
     }
 
     private void fireUpCurrencyActivity() {

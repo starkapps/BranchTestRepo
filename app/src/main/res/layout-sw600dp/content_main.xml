@@ -128,17 +128,20 @@
         android:textStyle="bold"
         android:textColor="@color/medLtBlue"
         android:textSize="20sp"
-        android:paddingBottom="10sp"
+        android:paddingBottom="40sp"
         android:layout_below="@+id/ask_price"
         android:layout_centerHorizontal="true" />
 
+    <com.jjoe64.graphview.GraphView
+        android:layout_width="match_parent"
+        android:layout_height="200dip"
+        android:layout_below="@+id/time_stamp"
+        android:id="@+id/graph" />
 
     <Button android:id="@+id/exit_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="@string/exit" />
-
-
 
 </RelativeLayout>
