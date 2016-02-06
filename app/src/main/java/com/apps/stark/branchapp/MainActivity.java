@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
         mGraph.getViewport().setMaxX(d2.getTime());
         mGraph.getViewport().setXAxisBoundsManual(true);
         mGraph.getViewport().setScrollable(true);
+        mGraph.getGridLabelRenderer().setNumHorizontalLabels(3);
 
         // custom label formatter to show currency "EUR"
         mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
