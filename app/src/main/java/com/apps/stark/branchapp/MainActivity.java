@@ -172,7 +172,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     mSpinnerAdapter.notifyDataSetChanged();
                     // Grab the first of current list of selected currencies
-                    mSelectedCurrency = mCurrencies[0];
+                    mCurrencyIndex = 0;
+                    mSelectedCurrency = mCurrencies[mCurrencyIndex];
+                    mCurrencySpinner.setSelection(mCurrencyIndex);
+                    startQuotes();
                 }
             }
         }
