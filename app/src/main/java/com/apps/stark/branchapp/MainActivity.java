@@ -1,19 +1,14 @@
 package com.apps.stark.branchapp;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -29,7 +24,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
@@ -43,13 +37,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final int CURRENCY_CODE = 100;
     public static final String KEY_CURRENCIES = "Currencies";
     public static final String KEY_SELECTED = "Selected";
+    private static final double NUM_POLL_SECONDS = 10d;
     private static final double VIEW_WINDOW_MILLIS = 120000d;
     private static final int DELAY = 10000;  // Millis
     private static final int NUM_DATA_POINTS = 1000;
@@ -62,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mExitButton;
     private GraphView mGraph;
     private LineGraphSeries<DataPoint> mDataSeries;
+    private double mLastX = 0d;
 
     private String mSelectedCurrency = "USD";
     private String[] mCurrencies;
@@ -70,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private int mCurrencyIndex = 0;
     private ArrayList<String> mAllCurrencies = new ArrayList<>();
     private HashMap<String, String> mCurrencyCountryMap = new HashMap<>();
+    private RequestQueue mRequestQueue;
+    private long mStartTime;
 
     final Handler mQuoteHandler = new Handler();
     Runnable mQuoteRunnable = new Runnable() {
@@ -92,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Util.readAssetFile(this, "currencies", mCurrencyCountryMap);
+        mRequestQueue = Volley.newRequestQueue(this);
 
         mTvCurrency = (TextView) findViewById(R.id.currency_name);
         mTVCountry = (TextView) findViewById(R.id.country_name);
@@ -99,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
         mTvTime = (TextView) findViewById(R.id.time_stamp);
         mCurrencies = getResources().getStringArray(R.array.selected_currencies);
         mCurrencySpinner = (Spinner) findViewById(R.id.currency_spinner);
-        mCurrencySpinner.setSelection(mCurrencyIndex);
         mCurrencySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
                 stopQuotes();
@@ -111,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+        mCurrencySpinner.setSelection(mCurrencyIndex);
         mSpinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
         mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mCurrencySpinner.setAdapter(mSpinnerAdapter);
@@ -128,47 +126,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mGraph = (GraphView) findViewById(R.id.graph);
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR, 8);
-        Date d1 = calendar.getTime();
-        calendar.add(Calendar.MINUTE, 2);
-        Date d2 = calendar.getTime();
-        mGraph.getViewport().setMinX(d1.getTime());
-        mGraph.getViewport().setMaxX(d2.getTime());
-        mGraph.getViewport().setXAxisBoundsManual(true);
-        mGraph.getViewport().setScrollable(true);
-        mGraph.getGridLabelRenderer().setNumHorizontalLabels(3);
-
-        // custom label formatter to show currency "EUR"
-        mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
-            @Override
-            public String formatLabel(double value, boolean isValueX) {
-                if (isValueX) {
-                    // show normal x values
-                    SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss");
-
-                    // Create a calendar object that will convert the date and time value in milliseconds to date.
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeInMillis((long)value);
-                    String label = formatter.format(calendar.getTime());
-                    return label;
-                } else {
-                    // show currency for y values
-                    return super.formatLabel(value, isValueX);
-                }
-            }
-        });
-
+        createGraph();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        // Only poll for prices if we're in the foreground
-        startQuotes();
-
     }
 
     @Override
@@ -215,6 +178,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void createGraph() {
+        mGraph = (GraphView) findViewById(R.id.graph);
+        mGraph.getViewport().setMinX(0);
+        mGraph.getViewport().setMaxX(40);
+        mGraph.getViewport().setXAxisBoundsManual(true);
+        mGraph.getViewport().setScrollable(true);
+        mGraph.getGridLabelRenderer().setNumHorizontalLabels(5);
+        mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    // Create a calendar object that will convert the date and time value in milliseconds to date.
+                    // "value" here is # of (roughly) 10-second ticks since first started receiving quotes
+                    SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:\nss");
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(((long) value * 1000) + mStartTime);
+                    String label = formatter.format(calendar.getTime());
+                    return label;
+                } else {
+                    return super.formatLabel(value, isValueX);
+                }
+            }
+        });
+    }
+
     private void startQuotes() {
         mQuoteHandler.post(mQuoteRunnable);
     }
@@ -223,11 +211,11 @@ public class MainActivity extends AppCompatActivity {
         mQuoteHandler.removeCallbacks(mQuoteRunnable);
         mGraph.removeAllSeries();
         mDataSeries = null;
+        mLastX = 0d;
     }
 
     private void getQuotes(String currency) {
         String url = getString(R.string.URL) + currency;
-        RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
@@ -247,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                         mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
                     }
                 });
-        queue.add(jsObjRequest);
+        mRequestQueue.add(jsObjRequest);
     }
 
     private QuoteInfo processJsonIntoQuote(JSONObject jsonQuote) {
@@ -266,6 +254,26 @@ public class MainActivity extends AppCompatActivity {
         return qi;
     }
 
+    private void updateGraph(QuoteInfo qi) {
+        Double dataPoint = Double.valueOf(qi.getAskingPrice());
+        if (mDataSeries == null) {
+            SimpleDateFormat formatter = new SimpleDateFormat("EEEE, dd MMM yyyy HH:mm:ss");
+            Date date = new Date();
+            try {
+                date = formatter.parse(qi.getTimeStamp());
+            } catch (Exception e) {
+                //Just use system time
+            }
+            mStartTime = date.getTime();
+            mDataSeries = new LineGraphSeries<>(new DataPoint[]{
+                    new DataPoint(mLastX, dataPoint)});
+            mGraph.addSeries(mDataSeries);
+        } else {
+            mDataSeries.appendData(new DataPoint(mLastX, dataPoint), true, NUM_DATA_POINTS);
+        }
+        mLastX += NUM_POLL_SECONDS;
+    }
+
     private void updateQuote(QuoteInfo qi) {
         mTvCurrency.setText(qi.getCurrencyName());
         mTVCountry.setText(qi.getCountryName());
@@ -273,26 +281,7 @@ public class MainActivity extends AppCompatActivity {
         mTvTime.setText(qi.getTimeStamp());
 
         // Update graph, too
-        Double dataPoint = Double.valueOf(qi.getAskingPrice());
-        SimpleDateFormat formatter = new SimpleDateFormat("EEEE, dd MMM yyyy HH:mm:ss");
-        Date date = new Date();
-        try {
-            date = formatter.parse(qi.getTimeStamp());
-        } catch (Exception e) {
-            //Just use system time
-        }
-        long time = date.getTime();
-        if (mDataSeries == null) {
-            mDataSeries = new LineGraphSeries<>(new DataPoint[] {
-                    new DataPoint(date, dataPoint)});
-            mGraph.addSeries(mDataSeries);
-            mGraph.getViewport().setMinX((double) time);
-            mGraph.getViewport().setMaxX((double) time + VIEW_WINDOW_MILLIS);
-            mGraph.getViewport().setScrollable(true);
-        } else {
-            // NUM_DATA_POINTS is how many GraphView will retain -- reduce # to use less memory
-            mDataSeries.appendData(new DataPoint(date, dataPoint), true, NUM_DATA_POINTS);
-        }
+        updateGraph(qi);
     }
 
     private void fireUpCurrencyActivity() {
@@ -302,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showErrorToast(String errStr) {
-        Toast.makeText(this, (String)errStr, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, (String) errStr, Toast.LENGTH_SHORT).show();
     }
 
     private void getJsonCurrencyList() {
@@ -325,7 +314,8 @@ public class MainActivity extends AppCompatActivity {
                             String errStr = "That didn't work! Error " + error;
                             Log.d(TAG, errStr);
                             showErrorToast("Volley request failed with network error " +
-                                    error.networkResponse.statusCode);                        }
+                                    error.networkResponse.statusCode);
+                        }
                     });
             queue.add(jsObjRequest);
         } else {
@@ -345,4 +335,13 @@ public class MainActivity extends AppCompatActivity {
         return currs;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
 }
