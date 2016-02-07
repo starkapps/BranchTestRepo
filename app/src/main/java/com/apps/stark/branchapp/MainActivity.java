@@ -16,12 +16,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -38,11 +33,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CommCallback {
 
     public static final int CURRENCY_CODE = 100;
     public static final String KEY_CURRENCIES = "Currencies";
     public static final String KEY_SELECTED = "Selected";
+    private static final String KEY_QUOTE = "Quote";
     private static final double NUM_POLL_SECONDS = 10d;
     private static final double VIEW_WINDOW_MILLIS = 120000d;
     private static final int DELAY = 10000;  // Millis
@@ -67,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, String> mCurrencyCountryMap = new HashMap<>();
     private RequestQueue mRequestQueue;
     private long mStartTime;
+    private VolleyStrategy mVolleyAgent;
 
     final Handler mQuoteHandler = new Handler();
     Runnable mQuoteRunnable = new Runnable() {
@@ -89,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Util.readAssetFile(this, "currencies", mCurrencyCountryMap);
-        mRequestQueue = Volley.newRequestQueue(this);
+        mVolleyAgent = new VolleyStrategy(this, this);
+        //mRequestQueue = Volley.newRequestQueue(this);
 
         mTvCurrency = (TextView) findViewById(R.id.currency_name);
         mTVCountry = (TextView) findViewById(R.id.country_name);
@@ -217,28 +215,35 @@ public class MainActivity extends AppCompatActivity {
         mLastX = 0d;
     }
 
+    // Decided to implement callbacks via interface since this provides
+    // the most immediate response to the UI.
+    public void quoteResponseCallback(JSONObject response) {
+        QuoteInfo qi = processJsonIntoQuote(response);
+        updateQuote(qi);
+        Log.d(TAG, "Success");
+        mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
+    }
+
+    public void quoteErrorCallback(String errStr) {
+        Log.d(TAG, "Failed");
+        showErrorToast(errStr);
+        mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
+    }
+    
+    public void currencyResponseCallback(JSONObject response) {
+        mAllCurrencies = getAllCurrencies(response);
+        fireUpCurrencyActivity();
+    }
+
+    public void currencyErrorCallback(String errStr) {
+        Log.d(TAG, "Failed");
+        showErrorToast(errStr);
+        mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
+    }
+
     private void getQuotes(String currency) {
         String url = getString(R.string.URL) + currency;
-
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        QuoteInfo qi = processJsonIntoQuote(response);
-                        updateQuote(qi);
-                        Log.d(TAG, "Success");
-                        mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d(TAG, "Failed");
-                        showErrorToast("Volley request failed with network error " +
-                                error.networkResponse.statusCode);
-                        mQuoteHandler.postDelayed(mQuoteRunnable, DELAY);
-                    }
-                });
-        mRequestQueue.add(jsObjRequest);
+        mVolleyAgent.sendRequest(url, CallbackOptions.QUOTE);
     }
 
     private QuoteInfo processJsonIntoQuote(JSONObject jsonQuote) {
@@ -302,25 +307,7 @@ public class MainActivity extends AppCompatActivity {
         // Assume that the list of all currencies won't change, so only fetch once from BitCoin
         if (mAllCurrencies.isEmpty()) {
             String url = getString(R.string.ALL_URL);
-            RequestQueue queue = Volley.newRequestQueue(this);
-
-            JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                    (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            mAllCurrencies = getAllCurrencies(response);
-                            fireUpCurrencyActivity();
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            String errStr = "That didn't work! Error " + error;
-                            Log.d(TAG, errStr);
-                            showErrorToast("Volley request failed with network error " +
-                                    error.networkResponse.statusCode);
-                        }
-                    });
-            queue.add(jsObjRequest);
+            mVolleyAgent.sendRequest(url, CallbackOptions.CURRENCY_LIST);
         } else {
             fireUpCurrencyActivity();
         }
